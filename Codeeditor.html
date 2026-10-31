@@ -1,0 +1,343 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meine Codewerkstatt</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 18px;
+  background: #101522;
+  color: #f2f5ff;
+  font-family: Arial, sans-serif;
+}
+
+.container {
+  max-width: 850px;
+  margin: auto;
+}
+
+h1 {
+  margin-bottom: 5px;
+  font-size: 27px;
+}
+
+.subtitle {
+  color: #aab4ca;
+  margin-top: 5px;
+  margin-bottom: 22px;
+}
+
+.panel {
+  background: #1b2435;
+  padding: 16px;
+  border-radius: 15px;
+  margin-bottom: 15px;
+  border: 1px solid #303d54;
+}
+
+label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 9px;
+}
+
+input {
+  width: 100%;
+  padding: 13px;
+  background: #101827;
+  border: 1px solid #46536b;
+  border-radius: 9px;
+  color: white;
+  font-size: 16px;
+}
+
+textarea {
+  width: 100%;
+  height: 55vh;
+  min-height: 330px;
+  resize: vertical;
+  background: #090f1b;
+  color: #d9f7df;
+  border: 1px solid #46536b;
+  border-radius: 10px;
+  padding: 15px;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  outline: none;
+  tab-size: 2;
+}
+
+textarea:focus,
+input:focus {
+  border-color: #62d99b;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 13px;
+}
+
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 13px 16px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  color: white;
+  background: #34445e;
+}
+
+button.primary {
+  background: #28a56b;
+  color: #061b11;
+  flex: 1;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+.info {
+  color: #aab4ca;
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+#status {
+  color: #73e6a6;
+  min-height: 20px;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+#fileInput {
+  display: none;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <h1>🛠️ Codewerkstatt</h1>
+  <p class="subtitle">
+    Dein eigener kleiner HTML-Editor.
+    Schreibe Code und speichere ihn als Datei.
+  </p>
+
+  <div class="panel">
+    <label for="filename">📄 Dateiname</label>
+    <input
+      id="filename"
+      type="text"
+      value="snake.html"
+      placeholder="z.B. snake.html"
+    >
+  </div>
+
+  <div class="panel">
+    <label for="code">💻 Dein HTML-Code</label>
+
+    <textarea
+      id="code"
+      spellcheck="false"
+      autocapitalize="off"
+      autocomplete="off"
+      autocorrect="off"
+      placeholder="Füge hier deinen HTML-Code ein..."
+    ></textarea>
+
+    <div class="info">
+      <span id="lines">0 Zeilen</span>
+      <span id="characters">0 Zeichen</span>
+    </div>
+
+    <div class="buttons">
+      <button class="primary" id="downloadBtn">
+        ⬇ HTML herunterladen
+      </button>
+    </div>
+
+    <div class="buttons">
+      <button id="openBtn">📂 Datei öffnen</button>
+      <button id="clearBtn">🗑 Feld leeren</button>
+      <input
+        id="fileInput"
+        type="file"
+        accept=".html,.htm,.txt,text/html,text/plain"
+      >
+    </div>
+
+    <p id="status">Bereit zum Programmieren!</p>
+  </div>
+
+  <div class="panel">
+    <strong>💡 Tipp</strong>
+    <p style="color:#aab4ca;line-height:1.5">
+      Gib oben deinen gewünschten Dateinamen ein.
+      Zum Beispiel <b>snake.html</b>.
+      Danach kannst du deinen Code direkt herunterladen.
+    </p>
+  </div>
+
+</div>
+
+<script>
+const code = document.getElementById("code");
+const filename = document.getElementById("filename");
+const statusText = document.getElementById("status");
+const fileInput = document.getElementById("fileInput");
+
+const DRAFT_KEY = "codewerkstatt-entwurf-v1";
+
+// Zeichen- und Zeilenzähler
+function updateStats() {
+  const text = code.value;
+
+  const lineCount = text.length
+    ? text.split("\n").length
+    : 0;
+
+  document.getElementById("lines").textContent =
+    lineCount + " Zeilen";
+
+  document.getElementById("characters").textContent =
+    text.length + " Zeichen";
+}
+
+// Entwurf automatisch speichern
+function saveDraft() {
+  try {
+    localStorage.setItem(DRAFT_KEY, code.value);
+    statusText.textContent = "✓ Entwurf automatisch gespeichert";
+  } catch (error) {
+    statusText.textContent =
+      "Hinweis: Automatisches Speichern ist gerade nicht verfügbar.";
+  }
+
+  updateStats();
+}
+
+// Vorhandenen Entwurf laden
+try {
+  const savedDraft = localStorage.getItem(DRAFT_KEY);
+
+  if (savedDraft !== null) {
+    code.value = savedDraft;
+    statusText.textContent = "Dein letzter Entwurf wurde geladen.";
+  }
+} catch (error) {
+  statusText.textContent = "Neuer Entwurf gestartet.";
+}
+
+code.addEventListener("input", saveDraft);
+updateStats();
+
+// Dateinamen vorbereiten
+function getSafeFilename() {
+  let name = filename.value.trim();
+
+  name = name.replace(/[\\/:*?"<>|]/g, "_");
+  name = name.replace(/^\.+/, "");
+
+  if (!name) {
+    name = "meine-datei";
+  }
+
+  if (!name.toLowerCase().endsWith(".html")) {
+    name += ".html";
+  }
+
+  return name;
+}
+
+// HTML herunterladen
+document.getElementById("downloadBtn")
+  .addEventListener("click", () => {
+
+    if (!code.value.trim()) {
+      statusText.textContent =
+        "Bitte schreibe zuerst etwas in das Codefeld.";
+      return;
+    }
+
+    const blob = new Blob(
+      [code.value],
+      { type: "text/html;charset=utf-8" }
+    );
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = getSafeFilename();
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    statusText.textContent =
+      "✓ " + getSafeFilename() + " wurde heruntergeladen!";
+  });
+
+// Vorhandene Datei öffnen
+document.getElementById("openBtn")
+  .addEventListener("click", () => {
+    fileInput.click();
+  });
+
+fileInput.addEventListener("change", async () => {
+  const file = fileInput.files[0];
+
+  if (!file) return;
+
+  try {
+    code.value = await file.text();
+    filename.value = file.name;
+
+    saveDraft();
+
+    statusText.textContent =
+      "✓ " + file.name + " wurde geöffnet!";
+  } catch (error) {
+    statusText.textContent =
+      "Die Datei konnte leider nicht geöffnet werden.";
+  }
+
+  fileInput.value = "";
+});
+
+// Codefeld leeren
+document.getElementById("clearBtn")
+  .addEventListener("click", () => {
+
+    if (!confirm("Möchtest du den gesamten Code löschen?")) {
+      return;
+    }
+
+    code.value = "";
+    saveDraft();
+
+    statusText.textContent = "Codefeld geleert.";
+  });
+</script>
+
+</body>
+</html>
